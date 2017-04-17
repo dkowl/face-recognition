@@ -10,16 +10,16 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	string dir, filename;
-	if (argc >= 3) {
-		dir = argv[1], filename = argv[2];
+	string dir;
+	if (argc >= 2) {
+		dir = argv[1];
 	}
 	else {
 		cout << "Wrong arguments\n";
 		return 0;
 	}
 
-	Eigenfaces eigenfaces(dir, filename);
+	Eigenfaces eigenfaces(dir);
 
 	system("PAUSE");
 	return 0;

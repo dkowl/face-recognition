@@ -1,9 +1,22 @@
 #include "eigenfaces.hpp"
 
-Eigenfaces::Eigenfaces(string dir, string filename)
+const string Eigenfaces::TEST_FOLDER = "test\\";
+const string Eigenfaces::TRAINING_FOLDER = "training\\";
+const string Eigenfaces::LABEL_FILE = "classes.csv";
+
+Eigenfaces::Eigenfaces(string dir):
+	dir_(dir)
+{
+	string path = dir_ + TRAINING_FOLDER + LABEL_FILE;
+	processLabelFile(path, true);	
+
+	path = dir_ + TEST_FOLDER + LABEL_FILE;
+	processLabelFile(path, false);
+}
+
+void Eigenfaces::processLabelFile(string path, bool isTraining)
 {
 	try {
-		string path = dir + filename;
 		ifstream input(path);
 
 		//csv processing
@@ -23,7 +36,7 @@ Eigenfaces::Eigenfaces(string dir, string filename)
 					s.clear();
 				}
 			}
-			if(!s.empty())
+			if (!s.empty())
 				values.push_back(s);
 
 			if (values.size() < 2) {
@@ -31,6 +44,10 @@ Eigenfaces::Eigenfaces(string dir, string filename)
 			}
 			filenames_.push_back(values[0]);
 			labels_.push_back(stoi(values[1]));
+			if (isTraining)
+				trainingIds_.push_back(labels_.size()-1);
+			else
+				testIds_.push_back(labels_.size() - 1);
 		}
 
 		for (int i = 0; i < filenames_.size(); i++) {
