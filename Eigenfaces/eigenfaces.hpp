@@ -6,6 +6,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace cv;
 
 class Eigenfaces {
 
@@ -15,6 +16,13 @@ class Eigenfaces {
 	vector<string> filenames_;
 	vector<int> labels_;
 	vector<int> trainingIds_, testIds_;
+
+	//OpenCV images
+	vector<Mat> cvMats_;
+
+	//Image vectors
+	typedef vector<uchar> Image;
+	vector<Image> images_;
 
 	void processLabelFile(string path, bool isTraining);
 	void vectorize();

@@ -12,6 +12,8 @@ Eigenfaces::Eigenfaces(string dir):
 
 	path = dir_ + TEST_FOLDER + LABEL_FILE;
 	processLabelFile(path, false);
+
+	vectorize();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -49,11 +51,6 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 			else
 				testIds_.push_back(labels_.size() - 1);
 		}
-
-		for (int i = 0; i < filenames_.size(); i++) {
-			cout << filenames_[i] << endl;
-			cout << labels_[i] << endl;
-		}
 	}
 	catch (exception &e) {
 		cerr << e.what();
@@ -62,5 +59,24 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 
 void Eigenfaces::vectorize()
 {
+	vector<string> paths(filenames_.size());
 
+	for (auto&& i : trainingIds_) {
+		paths[i] = dir_ + TRAINING_FOLDER + filenames_[i];
+	}
+	for (auto&& i : testIds_) {
+		paths[i] = dir_ + TEST_FOLDER + filenames_[i];
+	}
+
+	cvMats_.reserve(labels_.size());
+	images_.reserve(labels_.size());
+	for (int i = 0; i < paths.size(); i++) {
+		cvMats_.push_back(imread(paths[i], IMREAD_GRAYSCALE));
+
+		Image image;
+		for (int r = 0; r < cvMats_[i].rows; r++) {
+			image.insert(image.end(), cvMats_[i].ptr<uchar>(r), cvMats_[i].ptr<uchar>(r) + cvMats_[i].cols);
+		}
+		images_.push_back(image);
+	}
 }
