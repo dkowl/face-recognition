@@ -23,9 +23,11 @@ class Eigenfaces {
 	//Image vectors
 	typedef vector<uchar> Image;
 	vector<Image> images_;
+	Image mean_;
 
 	void processLabelFile(string path, bool isTraining);
 	void vectorize();
+	void computeMean();
 
 
 public:

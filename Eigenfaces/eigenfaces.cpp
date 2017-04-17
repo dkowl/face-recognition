@@ -14,6 +14,7 @@ Eigenfaces::Eigenfaces(string dir):
 	processLabelFile(path, false);
 
 	vectorize();
+	computeMean();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -79,4 +80,23 @@ void Eigenfaces::vectorize()
 		}
 		images_.push_back(image);
 	}
+}
+
+void Eigenfaces::computeMean()
+{
+	vector<int> sum(images_[0].size());
+	for (auto&& image : images_) {
+		for (int i = 0; i < image.size(); i++) {
+			sum[i] += image[i];
+		}
+	}
+	for (auto&& i : sum) {
+		i /= images_.size();
+	}
+	mean_.insert(mean_.end(), sum.begin(), sum.end());
+
+	Mat mat(cvMats_[0].size(), CV_8U);
+	memcpy(mat.data, mean_.data(), mean_.size() * sizeof(uchar));
+	imshow("Mean", mat);
+	waitKey();
 }
