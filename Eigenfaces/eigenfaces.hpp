@@ -13,6 +13,8 @@ class Eigenfaces {
 	vector<string> filenames_;
 	vector<int> labels_;
 
+	void vectorize();
+
 public:
 
 	Eigenfaces(string dir, string filename);
