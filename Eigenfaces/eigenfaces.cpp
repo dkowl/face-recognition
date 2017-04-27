@@ -3,6 +3,7 @@
 const string Eigenfaces::TEST_FOLDER = "test\\";
 const string Eigenfaces::TRAINING_FOLDER = "training\\";
 const string Eigenfaces::LABEL_FILE = "classes.csv";
+const int Eigenfaces::EIGENFACE_NO = 20;
 
 Eigenfaces::Eigenfaces(string dir):
 	dir_(dir)
@@ -16,6 +17,7 @@ Eigenfaces::Eigenfaces(string dir):
 	vectorize();
 	computeMean();
 	computeEigenfaces();
+	displayEigenfaces();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -124,9 +126,35 @@ void Eigenfaces::computeEigenfaces()
 	eigenfaces_ = A.transpose()*evReal;
 }
 
+void Eigenfaces::displayEigenfaces(int amount)
+{
+	if (amount > trainingSize()) amount = trainingSize();
+
+	Mat eigenfacesMat(imageRows(), imageCols()*amount, CV_8U);
+	for (int i = 0; i < imageRows(); i++) {
+		for (int j = 0; j < imageCols()*amount; j++) {
+			eigenfacesMat.at<uchar>(i, j) = uchar(eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) / 4) + 127;
+			//cout << eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) << " "
+			//	 << int(uchar(eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) / 4 + 127)) << endl;
+		}
+	}
+	imshow("Eigenfaces", eigenfacesMat);
+	waitKey();
+}
+
 int Eigenfaces::imageSize()
 {
 	return images_[0].size();
+}
+
+int Eigenfaces::imageRows()
+{
+	return cvMats_[0].rows;
+}
+
+int Eigenfaces::imageCols()
+{
+	return cvMats_[0].cols;
 }
 
 int Eigenfaces::trainingSize()

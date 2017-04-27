@@ -14,6 +14,7 @@ class Eigenfaces {
 
 	//Input processing
 	static const string TEST_FOLDER, TRAINING_FOLDER, LABEL_FILE;
+	static const int EIGENFACE_NO;
 	string dir_;
 	vector<string> filenames_;
 	vector<int> labels_;
@@ -35,7 +36,11 @@ class Eigenfaces {
 	void computeMean();
 	void computeEigenfaces();
 
+	void displayEigenfaces(int amount = EIGENFACE_NO);
+
 	int imageSize();
+	int imageRows();
+	int imageCols();
 	int trainingSize();
 
 public:
