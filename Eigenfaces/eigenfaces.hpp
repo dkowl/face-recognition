@@ -28,14 +28,15 @@ class Eigenfaces {
 	Image mean_;
 
 	//Eigen matrices
-	MatrixXd A_, C_; // A - training images, C - covariance matrix
+	MatrixXd eigenfaces_;
 
 	void processLabelFile(string path, bool isTraining);
 	void vectorize();
 	void computeMean();
-	void computeCovariance();
+	void computeEigenfaces();
 
 	int imageSize();
+	int trainingSize();
 
 public:
 

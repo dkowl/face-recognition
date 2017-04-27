@@ -15,7 +15,7 @@ Eigenfaces::Eigenfaces(string dir):
 
 	vectorize();
 	computeMean();
-	computeCovariance();
+	computeEigenfaces();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -102,10 +102,10 @@ void Eigenfaces::computeMean()
 	waitKey();*/
 }
 
-void Eigenfaces::computeCovariance()
+void Eigenfaces::computeEigenfaces()
 {
 	//Constructing array of training images
-	MatrixXd A(trainingIds_.size(), imageSize());
+	MatrixXd A(trainingSize(), imageSize());
 	for (int i = 0; i < trainingIds_.size(); i++) {
 		for (int j = 0; j < images_[i].size(); j++) {
 			A(i, j) = double(images_[i][j] - mean_[j]);
@@ -113,10 +113,23 @@ void Eigenfaces::computeCovariance()
 	}
 
 	MatrixXd covariance = (A*A.transpose())/imageSize();
-	cout << covariance << endl;
+	EigenSolver<MatrixXd> es(covariance);
+	MatrixXcd ev =  es.eigenvectors();
+	MatrixXd evReal(trainingSize(), trainingSize());
+	for (int i = 0; i < trainingSize(); i++) {
+		for (int j = 0; j < trainingSize(); j++) {
+			evReal(i, j) = ev(i, j).real();
+		}
+	}
+	eigenfaces_ = A.transpose()*evReal;
 }
 
 int Eigenfaces::imageSize()
 {
 	return images_[0].size();
+}
+
+int Eigenfaces::trainingSize()
+{
+	return trainingIds_.size();
 }
