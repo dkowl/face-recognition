@@ -15,6 +15,7 @@ Eigenfaces::Eigenfaces(string dir):
 
 	vectorize();
 	computeMean();
+	computeCovariance();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -95,8 +96,27 @@ void Eigenfaces::computeMean()
 	}
 	mean_.insert(mean_.end(), sum.begin(), sum.end());
 
-	Mat mat(cvMats_[0].size(), CV_8U);
+	/*Mat mat(cvMats_[0].size(), CV_8U);
 	memcpy(mat.data, mean_.data(), mean_.size() * sizeof(uchar));
 	imshow("Mean", mat);
-	waitKey();
+	waitKey();*/
+}
+
+void Eigenfaces::computeCovariance()
+{
+	//Constructing array of training images
+	MatrixXd A(trainingIds_.size(), imageSize());
+	for (int i = 0; i < trainingIds_.size(); i++) {
+		for (int j = 0; j < images_[i].size(); j++) {
+			A(i, j) = double(images_[i][j] - mean_[j]);
+		}
+	}
+
+	MatrixXd covariance = (A*A.transpose())/imageSize();
+	cout << covariance << endl;
+}
+
+int Eigenfaces::imageSize()
+{
+	return images_[0].size();
 }
