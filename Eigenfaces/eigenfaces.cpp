@@ -4,8 +4,10 @@ const string Eigenfaces::TEST_FOLDER = "test\\";
 const string Eigenfaces::TRAINING_FOLDER = "training\\";
 const string Eigenfaces::LABEL_FILE = "classes.csv";
 
-Eigenfaces::Eigenfaces(string dir):
-	dir_(dir)
+Eigenfaces::Eigenfaces(string dir) :
+	dir_(dir),
+	startFace_(1),
+	endFace_(EIGENFACE_NO)
 {
 	string path = dir_ + TRAINING_FOLDER + LABEL_FILE;
 	processLabelFile(path, true);	
@@ -18,6 +20,15 @@ Eigenfaces::Eigenfaces(string dir):
 	computeEigenfaces();
 	//displayEigenfaces();
 	computeWeights();
+
+	for (int i = 1; i < EIGENFACE_NO; i*=2) {
+		for (int j = i; j < EIGENFACE_NO; j *= 2) {
+			startFace_ = i;
+			endFace_ = j;
+			cout << test() << " ";
+		}
+		cout << endl;
+	}
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -151,9 +162,53 @@ void Eigenfaces::computeWeights()
 double Eigenfaces::weightDist(int id1, int id2)
 {
 	double result = 0.0;
-	for (int i = 0; i < EIGENFACE_NO; i++) {
-
+	for (int i = startFace_ - 1; i < endFace_; i++) {
+		double diff = weights_[id1][i] - weights_[id2][i];
+		result += diff*diff;
 	}
+	return result / EIGENFACE_NO;
+}
+
+vector<int> Eigenfaces::faceEngine(int id, int n)
+{
+	vector<pair<double, int>> distV;
+	for (auto i: trainingIds_) {
+		if (i != id) distV.push_back(pair<double, int>(weightDist(id, i), i));
+	}
+	sort(distV.begin(), distV.end());
+	vector<int> result;
+	for (int i = 0; i < n; i++) {
+		result.push_back(distV[i].second);
+	}
+	return result;
+}
+
+int Eigenfaces::classify(int id, bool verbose, int imagesToDisplayNo)
+{
+	vector<int> v = faceEngine(id, imagesToDisplayNo);
+
+	if (verbose) {
+		displayImages(vector<int>{id}, "Test case");
+		displayImages(v, "Results");
+	}
+
+	return labels_[v[0]];
+}
+
+double Eigenfaces::test(vector<int> testIds, bool verbose)
+{
+	double correct = 0.0;
+	for (auto testId : testIds) {
+		int label = classify(testId, verbose, 10);
+		if (label == labels_[testId]) correct++;
+	}
+	if(verbose) cout << "Accuracy: " << correct / testIds.size() << endl;
+	return correct / testIds.size();
+}
+
+double Eigenfaces::test(bool verbose)
+{
+	return test(testIds_, verbose);
 }
 
 void Eigenfaces::displayEigenfaces(int amount)
@@ -167,6 +222,16 @@ void Eigenfaces::displayEigenfaces(int amount)
 		}
 	}
 	imshow("Eigenfaces", eigenfacesMat);
+	waitKey();
+}
+
+void Eigenfaces::displayImages(vector<int> ids, string winName)
+{
+	vector<Mat> mats;
+	for (auto i : ids) mats.push_back(cvMats_[i]);
+	Mat result;
+	hconcat(mats,result);
+	imshow(winName, result);
 	waitKey();
 }
 

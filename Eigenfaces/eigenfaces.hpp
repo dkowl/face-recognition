@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 using namespace std;
 using namespace cv;
@@ -14,7 +15,7 @@ class Eigenfaces {
 
 	//Input processing
 	static const string TEST_FOLDER, TRAINING_FOLDER, LABEL_FILE;
-	static const int EIGENFACE_NO = 20;
+	static const int EIGENFACE_NO = 40;
 	string dir_;
 	vector<string> filenames_;
 	vector<int> labels_;
@@ -46,10 +47,18 @@ class Eigenfaces {
 	void computeWeights();
 
 	//classification
+	int startFace_, endFace_;
 	double weightDist(int id1, int id2);
+	vector<int> faceEngine(int id, int n);
+
+	//testing
+	int classify(int id, bool verbose = false, int imagesToDisplayNo = 1);
+	double test(vector<int> testIds, bool verbose = false);
+	double test(bool verbose = false);
 
 	//displaying
 	void displayEigenfaces(int amount = EIGENFACE_NO);
+	void displayImages(vector<int> ids, string winName = "Images");
 
 	//utils
 	int imageSize();
