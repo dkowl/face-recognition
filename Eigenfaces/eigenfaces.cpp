@@ -18,7 +18,7 @@ Eigenfaces::Eigenfaces(string dir) :
 	vectorize();
 	computeMean();
 	computeEigenfaces();
-	//displayEigenfaces();
+	displayEigenfaces();
 	computeWeights();
 
 	for (int i = 1; i < EIGENFACE_NO; i*=2) {
@@ -125,16 +125,30 @@ void Eigenfaces::computeEigenfaces()
 		}
 	}
 
+	//computing eigenvectors
 	MatrixXd covariance = (A*A.transpose())/imageSize();
 	EigenSolver<MatrixXd> es(covariance);
-	MatrixXcd ev =  es.eigenvectors();
+	MatrixXcd ev = es.eigenvectors();
 	MatrixXd evReal(trainingSize(), trainingSize());
 	for (int i = 0; i < trainingSize(); i++) {
 		for (int j = 0; j < trainingSize(); j++) {
 			evReal(i, j) = ev(i, j).real();
 		}
 	}
-	eigenfaces_ = A.transpose()*evReal;
+
+	//sorting eigenvectors by eigenvalues
+	VectorXcd evals = es.eigenvalues();
+	vector<pair<double, int>> evalsReal;
+	for (int i = 0; i < trainingSize(); i++) {
+		evalsReal.push_back(pair<double, int>(evals(i).real(), i));
+	}
+	sort(evalsReal.begin(), evalsReal.end(), greater<pair<double, int>>());
+	MatrixXd evRealSorted(trainingSize(), trainingSize());
+	for (int i = 0; i < trainingSize(); i++) {
+		evRealSorted.col(i) = evReal.col(evalsReal[i].second);
+	}
+
+	eigenfaces_ = A.transpose()*evRealSorted;
 }
 
 void Eigenfaces::computeWeights()
