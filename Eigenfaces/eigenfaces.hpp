@@ -14,7 +14,7 @@ class Eigenfaces {
 
 	//Input processing
 	static const string TEST_FOLDER, TRAINING_FOLDER, LABEL_FILE;
-	static const int EIGENFACE_NO;
+	static const int EIGENFACE_NO = 20;
 	string dir_;
 	vector<string> filenames_;
 	vector<int> labels_;
@@ -31,17 +31,33 @@ class Eigenfaces {
 	//Eigen matrices
 	MatrixXd eigenfaces_;
 
+	//Weight vectors
+	struct WeightV {
+		double w[EIGENFACE_NO];
+		double& operator[](int i) { return w[i]; }
+	};
+	vector<WeightV> weights_;
+
+	//training
 	void processLabelFile(string path, bool isTraining);
 	void vectorize();
 	void computeMean();
 	void computeEigenfaces();
+	void computeWeights();
 
+	//classification
+	double weightDist(int id1, int id2);
+
+	//displaying
 	void displayEigenfaces(int amount = EIGENFACE_NO);
 
+	//utils
 	int imageSize();
 	int imageRows();
 	int imageCols();
 	int trainingSize();
+	int testSize();
+	int datasetSize();
 
 public:
 

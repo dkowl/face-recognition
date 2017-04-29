@@ -3,7 +3,6 @@
 const string Eigenfaces::TEST_FOLDER = "test\\";
 const string Eigenfaces::TRAINING_FOLDER = "training\\";
 const string Eigenfaces::LABEL_FILE = "classes.csv";
-const int Eigenfaces::EIGENFACE_NO = 20;
 
 Eigenfaces::Eigenfaces(string dir):
 	dir_(dir)
@@ -17,7 +16,8 @@ Eigenfaces::Eigenfaces(string dir):
 	vectorize();
 	computeMean();
 	computeEigenfaces();
-	displayEigenfaces();
+	//displayEigenfaces();
+	computeWeights();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -126,6 +126,36 @@ void Eigenfaces::computeEigenfaces()
 	eigenfaces_ = A.transpose()*evReal;
 }
 
+void Eigenfaces::computeWeights()
+{
+	for (int i = 0; i < datasetSize(); i++) {
+		//Image vector
+		VectorXd I(imageSize());
+		for (int j = 0; j < imageSize(); j++) {
+			I(j) = double(images_[i][j] - mean_[j]);
+		}
+		//Weight vector
+		WeightV w;
+
+		for (int j = 0; j < EIGENFACE_NO; j++) {
+			//Eigenface vector
+			VectorXd E = eigenfaces_.col(j);
+			w[j] = E.transpose()*I;
+			w[j] /= imageSize() * 128;
+		}
+
+		weights_.push_back(w);
+	}
+}
+
+double Eigenfaces::weightDist(int id1, int id2)
+{
+	double result = 0.0;
+	for (int i = 0; i < EIGENFACE_NO; i++) {
+
+	}
+}
+
 void Eigenfaces::displayEigenfaces(int amount)
 {
 	if (amount > trainingSize()) amount = trainingSize();
@@ -134,8 +164,6 @@ void Eigenfaces::displayEigenfaces(int amount)
 	for (int i = 0; i < imageRows(); i++) {
 		for (int j = 0; j < imageCols()*amount; j++) {
 			eigenfacesMat.at<uchar>(i, j) = uchar(eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) / 4) + 127;
-			//cout << eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) << " "
-			//	 << int(uchar(eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) / 4 + 127)) << endl;
 		}
 	}
 	imshow("Eigenfaces", eigenfacesMat);
@@ -160,4 +188,14 @@ int Eigenfaces::imageCols()
 int Eigenfaces::trainingSize()
 {
 	return trainingIds_.size();
+}
+
+int Eigenfaces::testSize()
+{
+	return testIds_.size();
+}
+
+int Eigenfaces::datasetSize()
+{
+	return images_.size();
 }
