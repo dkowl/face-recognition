@@ -18,16 +18,26 @@ Eigenfaces::Eigenfaces(string dir) :
 	vectorize();
 	computeMean();
 	computeEigenfaces();
-	displayEigenfaces();
+	//displayEigenfaces();
 	computeWeights();
 
-	for (int i = 1; i < EIGENFACE_NO; i*=2) {
+	//Accuracy test
+	/*for (int i = 1; i < EIGENFACE_NO; i*=2) {
 		for (int j = i; j < EIGENFACE_NO; j *= 2) {
 			startFace_ = i;
 			endFace_ = j;
 			cout << test() << " ";
 		}
 		cout << endl;
+	}*/
+
+	//Reconstruction test
+	for (auto i : testIds_) {
+		displayImage(i);
+		displayImage(reconstruct(i, 5), "Reconstruction");
+		displayImage(reconstruct(i, 10), "Reconstruction");
+		displayImage(reconstruct(i, 20), "Reconstruction");
+		displayImage(reconstruct(i, EIGENFACE_NO), "Reconstruction");
 	}
 }
 
@@ -225,6 +235,20 @@ double Eigenfaces::test(bool verbose)
 	return test(testIds_, verbose);
 }
 
+Eigenfaces::Image Eigenfaces::reconstruct(int id, int n)
+{
+	vector<double> im(imageSize());
+	if (n > EIGENFACE_NO) n = EIGENFACE_NO;
+
+	for (int i = 0; i < imageSize(); i++) {
+		for (int j = 0; j < n; j++) {
+			im[i] += eigenfaces_(i, j) * weights_[id][j];
+		}
+	}
+
+	return normalize(im);
+}
+
 void Eigenfaces::displayEigenfaces(int amount)
 {
 	if (amount > trainingSize()) amount = trainingSize();
@@ -247,6 +271,25 @@ void Eigenfaces::displayImages(vector<int> ids, string winName)
 	hconcat(mats,result);
 	imshow(winName, result);
 	waitKey();
+}
+
+void Eigenfaces::displayImage(Image &im, string winName)
+{
+	Mat m(imageRows(), imageCols(), CV_8U);
+
+	for (int i = 0; i < imageRows(); i++) {
+		for (int j = 0; j < imageCols(); j++) {
+			m.at<uchar>(i, j) = im[i*imageCols() + j];
+		}
+	}
+
+	imshow(winName, m);
+	waitKey();
+}
+
+void Eigenfaces::displayImage(int i, string winName)
+{
+	displayImage(images_[i], winName);
 }
 
 int Eigenfaces::imageSize()
@@ -277,4 +320,19 @@ int Eigenfaces::testSize()
 int Eigenfaces::datasetSize()
 {
 	return images_.size();
+}
+
+Eigenfaces::Image Eigenfaces::normalize(vector<double>& v)
+{
+	double minVal = v[0], maxVal = v[0];
+	for (int i = 1; i < v.size(); i++) {
+		minVal = min(minVal, v[i]);
+		maxVal = max(maxVal, v[i]);
+	}
+	Image im(v.size());
+	for (int i = 0; i < v.size(); i++) {
+		im[i] = (v[i] - minVal) * (255 / (maxVal - minVal));
+	}
+
+	return im;
 }

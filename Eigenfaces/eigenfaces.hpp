@@ -55,10 +55,14 @@ class Eigenfaces {
 	int classify(int id, bool verbose = false, int imagesToDisplayNo = 1);
 	double test(vector<int> testIds, bool verbose = false);
 	double test(bool verbose = false);
+	Image reconstruct(int id, int n);
+
 
 	//displaying
 	void displayEigenfaces(int amount = EIGENFACE_NO);
 	void displayImages(vector<int> ids, string winName = "Images");
+	void displayImage(Image &im, string winName = "Image");
+	void displayImage(int i, string winName = "Image");
 
 	//utils
 	int imageSize();
@@ -67,6 +71,7 @@ class Eigenfaces {
 	int trainingSize();
 	int testSize();
 	int datasetSize();
+	Image normalize(vector<double>& v);
 
 public:
 
