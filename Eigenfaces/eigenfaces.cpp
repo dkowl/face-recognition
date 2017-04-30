@@ -22,23 +22,24 @@ Eigenfaces::Eigenfaces(string dir) :
 	computeWeights();
 
 	//Accuracy test
-	/*for (int i = 1; i < EIGENFACE_NO; i*=2) {
+	for (int i = 1; i < EIGENFACE_NO; i*=2) {
 		for (int j = i; j < EIGENFACE_NO; j *= 2) {
 			startFace_ = i;
 			endFace_ = j;
-			cout << test() << " ";
+			cout << test(true) << " ";
 		}
 		cout << endl;
-	}*/
+	}
 
 	//Reconstruction test
+	/*
 	for (auto i : testIds_) {
 		displayImage(i);
 		displayImage(reconstruct(i, 5), "Reconstruction");
 		displayImage(reconstruct(i, 10), "Reconstruction");
 		displayImage(reconstruct(i, 20), "Reconstruction");
 		displayImage(reconstruct(i, EIGENFACE_NO), "Reconstruction");
-	}
+	}*/
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -216,7 +217,18 @@ int Eigenfaces::classify(int id, bool verbose, int imagesToDisplayNo)
 		displayImages(v, "Results");
 	}
 
-	return labels_[v[0]];
+	map<int, int> labelCount;
+	for (int i = 0; i < v.size(); i++) {
+		labelCount[labels_[v[i]]]++;
+	}
+	int maxCount = 0, bestLabel;
+	for (auto p : labelCount) {
+		if (p.second > maxCount) {
+			maxCount = p.second;
+			bestLabel = p.first;
+		}
+	}
+	return bestLabel;
 }
 
 double Eigenfaces::test(vector<int> testIds, bool verbose)
