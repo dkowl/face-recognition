@@ -56,13 +56,15 @@ class Eigenfaces {
 	double test(vector<int> testIds, bool verbose = false);
 	double test(bool verbose = false);
 	Image reconstruct(int id, int n);
+	void accuracyTest(bool verbose = false);
+	void reconstructionTest();
 
 
 	//displaying
 	void displayEigenfaces(int amount = EIGENFACE_NO);
 	void displayImages(vector<int> ids, string winName = "Images");
-	void displayImage(Image &im, string winName = "Image");
-	void displayImage(int i, string winName = "Image");
+	Mat displayImage(Image &im);
+	Mat displayImage(int i);
 
 	//utils
 	int imageSize();

@@ -20,26 +20,8 @@ Eigenfaces::Eigenfaces(string dir) :
 	computeEigenfaces();
 	//displayEigenfaces();
 	computeWeights();
-
-	//Accuracy test
-	for (int i = 1; i < EIGENFACE_NO; i*=2) {
-		for (int j = i; j < EIGENFACE_NO; j *= 2) {
-			startFace_ = i;
-			endFace_ = j;
-			cout << test(true) << " ";
-		}
-		cout << endl;
-	}
-
-	//Reconstruction test
-	/*
-	for (auto i : testIds_) {
-		displayImage(i);
-		displayImage(reconstruct(i, 5), "Reconstruction");
-		displayImage(reconstruct(i, 10), "Reconstruction");
-		displayImage(reconstruct(i, 20), "Reconstruction");
-		displayImage(reconstruct(i, EIGENFACE_NO), "Reconstruction");
-	}*/
+	
+	reconstructionTest();
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -261,6 +243,36 @@ Eigenfaces::Image Eigenfaces::reconstruct(int id, int n)
 	return normalize(im);
 }
 
+void Eigenfaces::accuracyTest(bool verbose)
+{
+	for (int i = 1; i < EIGENFACE_NO; i *= 2) {
+		for (int j = i; j < EIGENFACE_NO; j *= 2) {
+			startFace_ = i;
+			endFace_ = j;
+			cout << test(verbose) << " ";
+		}
+		cout << endl;
+	}
+}
+
+void Eigenfaces::reconstructionTest()
+{
+	vector<int> faceNo{ 5, 10, 20, EIGENFACE_NO };
+	Mat original, reconstructed, error(imageRows(), imageCols(), CV_8U);
+	for (int i = 0; i < datasetSize(); i++) {
+		for (auto f : faceNo) {
+			original = displayImage(i);
+			reconstructed = displayImage(reconstruct(i, f));
+			absdiff(original, reconstructed, error);
+			vector<Mat> mats{ original, reconstructed, error };
+			Mat out;
+			hconcat(mats, out);
+			imshow("Reconstruction", out);
+			waitKey();
+		}
+	}
+}
+
 void Eigenfaces::displayEigenfaces(int amount)
 {
 	if (amount > trainingSize()) amount = trainingSize();
@@ -285,7 +297,7 @@ void Eigenfaces::displayImages(vector<int> ids, string winName)
 	waitKey();
 }
 
-void Eigenfaces::displayImage(Image &im, string winName)
+Mat Eigenfaces::displayImage(Image &im)
 {
 	Mat m(imageRows(), imageCols(), CV_8U);
 
@@ -295,13 +307,12 @@ void Eigenfaces::displayImage(Image &im, string winName)
 		}
 	}
 
-	imshow(winName, m);
-	waitKey();
+	return m;
 }
 
-void Eigenfaces::displayImage(int i, string winName)
+Mat Eigenfaces::displayImage(int i)
 {
-	displayImage(images_[i], winName);
+	return displayImage(images_[i]);
 }
 
 int Eigenfaces::imageSize()
