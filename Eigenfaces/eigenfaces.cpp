@@ -7,7 +7,8 @@ const string Eigenfaces::LABEL_FILE = "classes.csv";
 Eigenfaces::Eigenfaces(string dir) :
 	dir_(dir),
 	startFace_(1),
-	endFace_(EIGENFACE_NO)
+	endFace_(EIGENFACE_NO),
+	kNeighbours_(1)
 {
 	string path = dir_ + TRAINING_FOLDER + LABEL_FILE;
 	processLabelFile(path, true);	
@@ -21,7 +22,14 @@ Eigenfaces::Eigenfaces(string dir) :
 	//displayEigenfaces();
 	computeWeights();
 	
-	reconstructionTest();
+	//reconstructionTest();
+	/*vector<int> kV{ 1, 3, 7, 15 };
+	for (auto k : kV) {
+		kNeighbours_ = k;
+		cout << " k-neighbours: " << k << endl;
+		accuracyTest();
+	}*/
+	test(true);
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -101,11 +109,6 @@ void Eigenfaces::computeMean()
 		i /= images_.size();
 	}
 	mean_.insert(mean_.end(), sum.begin(), sum.end());
-
-	/*Mat mat(cvMats_[0].size(), CV_8U);
-	memcpy(mat.data, mean_.data(), mean_.size() * sizeof(uchar));
-	imshow("Mean", mat);
-	waitKey();*/
 }
 
 void Eigenfaces::computeEigenfaces()
@@ -217,8 +220,11 @@ double Eigenfaces::test(vector<int> testIds, bool verbose)
 {
 	double correct = 0.0;
 	for (auto testId : testIds) {
-		int label = classify(testId, verbose, 10);
+		int label = classify(testId, verbose, kNeighbours_);
 		if (label == labels_[testId]) correct++;
+		if (verbose) {
+			cout << "Input: " << labels_[testId] << " --- Output: " << label << endl;
+		}
 	}
 	if(verbose) cout << "Accuracy: " << correct / testIds.size() << endl;
 	return correct / testIds.size();
@@ -276,13 +282,25 @@ void Eigenfaces::reconstructionTest()
 void Eigenfaces::displayEigenfaces(int amount)
 {
 	if (amount > trainingSize()) amount = trainingSize();
+	static const int facesPerRow = 15;
+	int rows = amount / facesPerRow, cols = min(facesPerRow, amount);
 
-	Mat eigenfacesMat(imageRows(), imageCols()*amount, CV_8U);
-	for (int i = 0; i < imageRows(); i++) {
-		for (int j = 0; j < imageCols()*amount; j++) {
-			eigenfacesMat.at<uchar>(i, j) = uchar(eigenfaces_(j%imageCols() + i*imageCols(), j / imageCols()) / 4) + 127;
+	Mat eigenfacesMat(imageRows()*rows, imageCols()*cols, CV_8U);
+	vector<Mat> matRows;
+	for (int i = 0; i < rows; i++) {
+		Mat matRow;
+		vector<Mat> rowMats;
+		for (int j = 0; j < cols; j++) {
+			vector<double>vTemp(imageSize());
+			for (int k = 0; k < imageSize(); k++) {
+				vTemp[k] = eigenfaces_(k, i*cols + j);
+			}
+			rowMats.push_back(displayImage(normalize(vTemp)));
 		}
+		hconcat(rowMats, matRow);
+		matRows.push_back(matRow);
 	}
+	vconcat(matRows, eigenfacesMat);
 	imshow("Eigenfaces", eigenfacesMat);
 	waitKey();
 }

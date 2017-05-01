@@ -15,7 +15,7 @@ class Eigenfaces {
 
 	//Input processing
 	static const string TEST_FOLDER, TRAINING_FOLDER, LABEL_FILE;
-	static const int EIGENFACE_NO = 40;
+	static const int EIGENFACE_NO = 80;
 	string dir_;
 	vector<string> filenames_;
 	vector<int> labels_;
@@ -47,7 +47,7 @@ class Eigenfaces {
 	void computeWeights();
 
 	//classification
-	int startFace_, endFace_;
+	int startFace_, endFace_, kNeighbours_;
 	double weightDist(int id1, int id2);
 	vector<int> faceEngine(int id, int n);
 
