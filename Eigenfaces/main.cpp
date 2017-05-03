@@ -20,6 +20,11 @@ int main(int argc, char** argv)
 	}
 
 	Eigenfaces eigenfaces(dir);
+	eigenfaces.reconstructionTest();
+
+	string MAREK_PATH = "C:\\Users\\Dominik\\Desktop\\ISEL\\CV\\ComputerVision\\data\\custom\\marek.jpg";
+	string DOMINIK_PATH = "C:\\Users\\Dominik\\Desktop\\ISEL\\CV\\ComputerVision\\data\\custom\\dominik.jpg";
+	eigenfaces.testCustomFace(DOMINIK_PATH); 
 
 	system("PAUSE");
 	return 0;

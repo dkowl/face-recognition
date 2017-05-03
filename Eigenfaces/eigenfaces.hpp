@@ -18,6 +18,7 @@ class Eigenfaces {
 	static const int EIGENFACE_NO = 80;
 	string dir_;
 	vector<string> filenames_;
+	vector<string> paths_;
 	vector<int> labels_;
 	vector<int> trainingIds_, testIds_;
 
@@ -41,24 +42,17 @@ class Eigenfaces {
 
 	//training
 	void processLabelFile(string path, bool isTraining);
+	void computePaths();
 	void vectorize();
 	void computeMean();
 	void computeEigenfaces();
 	void computeWeights();
+	void train();
 
 	//classification
 	int startFace_, endFace_, kNeighbours_;
 	double weightDist(int id1, int id2);
-	vector<int> faceEngine(int id, int n);
-
-	//testing
-	int classify(int id, bool verbose = false, int imagesToDisplayNo = 1);
-	double test(vector<int> testIds, bool verbose = false);
-	double test(bool verbose = false);
-	Image reconstruct(int id, int n);
-	void accuracyTest(bool verbose = false);
-	void reconstructionTest();
-
+	vector<int> faceEngine(int id, int n);	
 
 	//displaying
 	void displayEigenfaces(int amount = EIGENFACE_NO);
@@ -74,8 +68,20 @@ class Eigenfaces {
 	int testSize();
 	int datasetSize();
 	Image normalize(vector<double>& v);
+	Image cvMatToImage(Mat mat);
 
 public:
 
 	Eigenfaces(string dir);
+
+	int addFace(string path, int label, bool training);
+
+	//testing
+	int classify(int id, bool verbose = false, int imagesToDisplayNo = 1);
+	double test(vector<int> testIds, bool verbose = false);
+	double test(bool verbose = false);
+	Image reconstruct(int id, int n);
+	void accuracyTest(bool verbose = false);
+	void reconstructionTest(vector<int> faceIds = vector<int>());
+	void testCustomFace(string path);
 };

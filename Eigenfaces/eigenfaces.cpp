@@ -16,11 +16,9 @@ Eigenfaces::Eigenfaces(string dir) :
 	path = dir_ + TEST_FOLDER + LABEL_FILE;
 	processLabelFile(path, false);
 
+	computePaths();
 	vectorize();
-	computeMean();
-	computeEigenfaces();
-	//displayEigenfaces();
-	computeWeights();
+	train();
 	
 	//reconstructionTest();
 	/*vector<int> kV{ 1, 3, 7, 15 };
@@ -29,7 +27,33 @@ Eigenfaces::Eigenfaces(string dir) :
 		cout << " k-neighbours: " << k << endl;
 		accuracyTest();
 	}*/
-	test(true);
+	//test(true);
+}
+
+int Eigenfaces::addFace(string path, int label, bool training)
+{
+	Mat mat = imread(path);
+	cvtColor(mat, mat, COLOR_RGB2GRAY);
+	resize(mat, mat, Size(imageCols(), imageRows()));
+	cvMats_.push_back(mat);
+	images_.push_back(cvMatToImage(mat));
+
+	paths_.push_back(path);
+	labels_.push_back(label);
+	int id = labels_.size() - 1;
+	if (training) {
+		trainingIds_.push_back(id);
+	}
+	else {
+		testIds_.push_back(id);
+	}
+
+	if (training) {
+		train();
+	}
+	else computeWeights();
+
+	return id;
 }
 
 void Eigenfaces::processLabelFile(string path, bool isTraining)
@@ -73,27 +97,25 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 	}
 }
 
-void Eigenfaces::vectorize()
+void Eigenfaces::computePaths()
 {
-	vector<string> paths(filenames_.size());
+	paths_ = vector<string>(filenames_.size());
 
 	for (auto&& i : trainingIds_) {
-		paths[i] = dir_ + TRAINING_FOLDER + filenames_[i];
+		paths_[i] = dir_ + TRAINING_FOLDER + filenames_[i];
 	}
 	for (auto&& i : testIds_) {
-		paths[i] = dir_ + TEST_FOLDER + filenames_[i];
+		paths_[i] = dir_ + TEST_FOLDER + filenames_[i];
 	}
+}
 
+void Eigenfaces::vectorize()
+{
 	cvMats_.reserve(labels_.size());
 	images_.reserve(labels_.size());
-	for (int i = 0; i < paths.size(); i++) {
-		cvMats_.push_back(imread(paths[i], IMREAD_GRAYSCALE));
-
-		Image image;
-		for (int r = 0; r < cvMats_[i].rows; r++) {
-			image.insert(image.end(), cvMats_[i].ptr<uchar>(r), cvMats_[i].ptr<uchar>(r) + cvMats_[i].cols);
-		}
-		images_.push_back(image);
+	for (int i = 0; i < paths_.size(); i++) {
+		cvMats_.push_back(imread(paths_[i], IMREAD_GRAYSCALE));		
+		images_.push_back(cvMatToImage(cvMats_[i]));
 	}
 }
 
@@ -149,6 +171,7 @@ void Eigenfaces::computeEigenfaces()
 
 void Eigenfaces::computeWeights()
 {
+	weights_ = vector<WeightV>(datasetSize());
 	for (int i = 0; i < datasetSize(); i++) {
 		//Image vector
 		VectorXd I(imageSize());
@@ -165,8 +188,15 @@ void Eigenfaces::computeWeights()
 			w[j] /= imageSize() * 128;
 		}
 
-		weights_.push_back(w);
+		weights_[i] = w;
 	}
+}
+
+void Eigenfaces::train()
+{
+	computeMean();
+	computeEigenfaces();
+	computeWeights();
 }
 
 double Eigenfaces::weightDist(int id1, int id2)
@@ -261,11 +291,14 @@ void Eigenfaces::accuracyTest(bool verbose)
 	}
 }
 
-void Eigenfaces::reconstructionTest()
+void Eigenfaces::reconstructionTest(vector<int> faceIds)
 {
+	if (faceIds.empty()) {
+		for (int i = 0; i < datasetSize(); i++) faceIds.push_back(i);
+	}
 	vector<int> faceNo{ 5, 10, 20, EIGENFACE_NO };
 	Mat original, reconstructed, error(imageRows(), imageCols(), CV_8U);
-	for (int i = 0; i < datasetSize(); i++) {
+	for (auto i: faceIds) {
 		for (auto f : faceNo) {
 			original = displayImage(i);
 			reconstructed = displayImage(reconstruct(i, f));
@@ -376,4 +409,20 @@ Eigenfaces::Image Eigenfaces::normalize(vector<double>& v)
 	}
 
 	return im;
+}
+
+Eigenfaces::Image Eigenfaces::cvMatToImage(Mat mat)
+{
+	Image image;
+	for (int r = 0; r < mat.rows; r++) {
+		image.insert(image.end(), mat.ptr<uchar>(r), mat.ptr<uchar>(r) + mat.cols);
+	}
+	return image;
+}
+
+void Eigenfaces::testCustomFace(string path)
+{
+	int id = addFace(path, datasetSize()+1, false);
+	classify(id, true, 10);
+	reconstructionTest(vector<int>{id});
 }
