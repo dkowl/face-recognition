@@ -47,6 +47,7 @@ int Eigenfaces::addFace(string path, int label, bool training)
 	else {
 		testIds_.push_back(id);
 	}
+	classIds_[label].push_back(id);
 
 	if (training) {
 		train();
@@ -84,12 +85,15 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 			if (values.size() < 2) {
 				throw (std::exception("Invalid csv line"));
 			}
+			int label = stoi(values[1]);
 			filenames_.push_back(values[0]);
-			labels_.push_back(stoi(values[1]));
+			labels_.push_back(label);
+			int id = labels_.size() - 1;
 			if (isTraining)
-				trainingIds_.push_back(labels_.size()-1);
+				trainingIds_.push_back(id);
 			else
-				testIds_.push_back(labels_.size() - 1);
+				testIds_.push_back(id);
+			classIds_[label].push_back(id);
 		}
 	}
 	catch (exception &e) {
@@ -133,6 +137,11 @@ void Eigenfaces::computeMean()
 	mean_.insert(mean_.end(), sum.begin(), sum.end());
 }
 
+void Eigenfaces::computeClassMeans()
+{
+	
+}
+
 void Eigenfaces::computeEigenfaces()
 {
 	//Constructing array of training images
@@ -167,6 +176,11 @@ void Eigenfaces::computeEigenfaces()
 	}
 
 	eigenfaces_ = A.transpose()*evRealSorted;
+}
+
+void Eigenfaces::computeFisherfaces()
+{
+	
 }
 
 void Eigenfaces::computeWeights()
@@ -276,6 +290,10 @@ Eigenfaces::Image Eigenfaces::reconstruct(int id, int n)
 		}
 	}
 
+	Image imN = normalize(im);
+	for (int i = 0; i < im.size(); i++) {
+		im[i] = mean_[i] + imN[i];
+	}
 	return normalize(im);
 }
 

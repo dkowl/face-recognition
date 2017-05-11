@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <string>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <algorithm>
 
@@ -21,6 +22,7 @@ class Eigenfaces {
 	vector<string> paths_;
 	vector<int> labels_;
 	vector<int> trainingIds_, testIds_;
+	map<int, vector<int>> classIds_;
 
 	//OpenCV images
 	vector<Mat> cvMats_;
@@ -29,6 +31,7 @@ class Eigenfaces {
 	typedef vector<uchar> Image;
 	vector<Image> images_;
 	Image mean_;
+	vector<Image> classMean_;
 
 	//Eigen matrices
 	MatrixXd eigenfaces_;
@@ -45,7 +48,9 @@ class Eigenfaces {
 	void computePaths();
 	void vectorize();
 	void computeMean();
+	void computeClassMeans();
 	void computeEigenfaces();
+	void computeFisherfaces();
 	void computeWeights();
 	void train();
 
