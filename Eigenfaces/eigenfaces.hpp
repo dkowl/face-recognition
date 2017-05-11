@@ -22,9 +22,10 @@ class Eigenfaces {
 	vector<string> filenames_;
 	vector<string> paths_;
 	vector<int> labels_;
+	map<int, int> labelToClassId_;
 	vector<int> trainingIds_, testIds_;
 	set<int> trainingIdSet_, testIdSet_;
-	map<int, vector<int>> classIds_;
+	vector<vector<int>> classIds_;
 
 	//OpenCV images
 	vector<Mat> cvMats_;
@@ -47,6 +48,7 @@ class Eigenfaces {
 
 	//training
 	void processLabelFile(string path, bool isTraining);
+	void computeClassIds();
 	void computePaths();
 	void addId(int id, bool isTraining);
 	void vectorize();

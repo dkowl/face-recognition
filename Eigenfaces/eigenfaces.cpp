@@ -11,15 +11,16 @@ Eigenfaces::Eigenfaces(string dir) :
 	kNeighbours_(1)
 {
 	string path = dir_ + TRAINING_FOLDER + LABEL_FILE;
-	processLabelFile(path, true);	
+	processLabelFile(path, true);
 
 	path = dir_ + TEST_FOLDER + LABEL_FILE;
 	processLabelFile(path, false);
 
+	computeClassIds();
 	computePaths();
 	vectorize();
 	train();
-	
+
 	//reconstructionTest();
 	/*vector<int> kV{ 1, 3, 7, 15 };
 	for (auto k : kV) {
@@ -91,6 +92,22 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 	}
 }
 
+void Eigenfaces::computeClassIds()
+{
+	int classId = -1;
+	for (int i = 0; i < labels_.size(); i++) {
+		if (labelToClassId_.find(labels_[i]) == labelToClassId_.end()){
+			classId++;
+			labelToClassId_[labels_[i]] = classId;
+		}
+	}
+
+	classIds_ = vector<vector<int>>(datasetSize());
+	for (int i = 0; i < labels_.size(); i++) {
+		classIds_[labelToClassId_[labels_[i]]].push_back(i);
+	}
+}
+
 void Eigenfaces::computePaths()
 {
 	paths_ = vector<string>(filenames_.size());
@@ -113,7 +130,6 @@ void Eigenfaces::addId(int id, bool isTraining)
 		testIds_.push_back(id);
 		testIdSet_.insert(id);
 	}
-	classIds_[labels_[id]].push_back(id);
 }
 
 void Eigenfaces::vectorize()
@@ -142,8 +158,21 @@ void Eigenfaces::computeMean()
 
 void Eigenfaces::computeClassMeans()
 {
-	set<int> trainingIds, testIds;
-
+	for (auto v : classIds_) {
+		vector<int> ids;
+		for (int i = 0; i < v.size(); i++) {
+			ids.push_back(v[i]);
+		}
+		Image mean(imageSize());
+		for (int i = 0; i < imageSize(); i++) {
+			double sum = 0;
+			for (auto j : ids) {
+				sum += images_[j][i];
+			}
+			mean[i] = sum / ids.size();
+		}
+		classMean_.push_back(mean);
+	}
 }
 
 void Eigenfaces::computeEigenfaces()
@@ -213,6 +242,7 @@ void Eigenfaces::computeWeights()
 void Eigenfaces::train()
 {
 	computeMean();
+	computeClassMeans();
 	computeEigenfaces();
 	computeWeights();
 }
@@ -415,7 +445,7 @@ int Eigenfaces::testSize()
 
 int Eigenfaces::datasetSize()
 {
-	return images_.size();
+	return trainingSize() + testSize();
 }
 
 Eigenfaces::Image Eigenfaces::normalize(vector<double>& v)
