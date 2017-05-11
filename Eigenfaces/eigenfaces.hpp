@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 #include <fstream>
 #include <algorithm>
 
@@ -22,6 +23,7 @@ class Eigenfaces {
 	vector<string> paths_;
 	vector<int> labels_;
 	vector<int> trainingIds_, testIds_;
+	set<int> trainingIdSet_, testIdSet_;
 	map<int, vector<int>> classIds_;
 
 	//OpenCV images
@@ -46,6 +48,7 @@ class Eigenfaces {
 	//training
 	void processLabelFile(string path, bool isTraining);
 	void computePaths();
+	void addId(int id, bool isTraining);
 	void vectorize();
 	void computeMean();
 	void computeClassMeans();

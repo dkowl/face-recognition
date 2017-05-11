@@ -41,13 +41,7 @@ int Eigenfaces::addFace(string path, int label, bool training)
 	paths_.push_back(path);
 	labels_.push_back(label);
 	int id = labels_.size() - 1;
-	if (training) {
-		trainingIds_.push_back(id);
-	}
-	else {
-		testIds_.push_back(id);
-	}
-	classIds_[label].push_back(id);
+	addId(id, training);
 
 	if (training) {
 		train();
@@ -89,11 +83,7 @@ void Eigenfaces::processLabelFile(string path, bool isTraining)
 			filenames_.push_back(values[0]);
 			labels_.push_back(label);
 			int id = labels_.size() - 1;
-			if (isTraining)
-				trainingIds_.push_back(id);
-			else
-				testIds_.push_back(id);
-			classIds_[label].push_back(id);
+			addId(id, isTraining);
 		}
 	}
 	catch (exception &e) {
@@ -111,6 +101,19 @@ void Eigenfaces::computePaths()
 	for (auto&& i : testIds_) {
 		paths_[i] = dir_ + TEST_FOLDER + filenames_[i];
 	}
+}
+
+void Eigenfaces::addId(int id, bool isTraining)
+{
+	if (isTraining) {
+		trainingIds_.push_back(id);
+		trainingIdSet_.insert(id);
+	}
+	else {
+		testIds_.push_back(id);
+		testIdSet_.insert(id);
+	}
+	classIds_[labels_[id]].push_back(id);
 }
 
 void Eigenfaces::vectorize()
@@ -139,7 +142,8 @@ void Eigenfaces::computeMean()
 
 void Eigenfaces::computeClassMeans()
 {
-	
+	set<int> trainingIds, testIds;
+
 }
 
 void Eigenfaces::computeEigenfaces()
