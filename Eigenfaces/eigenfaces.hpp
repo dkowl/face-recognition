@@ -15,6 +15,13 @@ using namespace Eigen;
 
 class Eigenfaces {
 
+public: 
+	enum Method {
+		EIGEN,
+		FISHER
+	};
+
+private:
 	//Input processing
 	static const string TEST_FOLDER, TRAINING_FOLDER, LABEL_FILE;
 	static const int EIGENFACE_NO = 80;
@@ -37,6 +44,7 @@ class Eigenfaces {
 	vector<Image> classMean_;
 
 	//Eigen matrices
+	MatrixXd faces_;
 	MatrixXd eigenfaces_;
 	MatrixXd fisherfaces_;
 
@@ -62,6 +70,7 @@ class Eigenfaces {
 	void train();
 
 	//classification
+	Method method_;
 	int startFace_, endFace_, kNeighbours_;
 	double weightDist(int id1, int id2);
 	vector<int> faceEngine(int id, int n);	
@@ -98,4 +107,5 @@ public:
 	void accuracyTest(bool verbose = false);
 	void reconstructionTest(vector<int> faceIds = vector<int>());
 	void testCustomFace(string path);
+	void setMethod(Method m);
 };

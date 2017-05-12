@@ -20,7 +20,8 @@ int main(int argc, char** argv)
 	}
 
 	Eigenfaces eigenfaces(dir);
-	eigenfaces.reconstructionTest();
+	eigenfaces.setMethod(Eigenfaces::FISHER);
+	eigenfaces.accuracyTest();
 
 	system("PAUSE");
 	return 0;

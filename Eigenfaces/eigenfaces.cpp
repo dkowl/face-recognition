@@ -8,7 +8,8 @@ Eigenfaces::Eigenfaces(string dir) :
 	dir_(dir),
 	startFace_(1),
 	endFace_(EIGENFACE_NO),
-	kNeighbours_(1)
+	kNeighbours_(1),
+	method_(EIGEN)
 {
 	string path = dir_ + TRAINING_FOLDER + LABEL_FILE;
 	processLabelFile(path, true);
@@ -21,14 +22,14 @@ Eigenfaces::Eigenfaces(string dir) :
 	vectorize();
 	train();
 
-	//reconstructionTest();
-	/*vector<int> kV{ 1, 3, 7, 15 };
+	//test(true);
+	vector<int> kV{ 1, 3, 7, 15 };
 	for (auto k : kV) {
 		kNeighbours_ = k;
 		cout << " k-neighbours: " << k << endl;
 		accuracyTest();
-	}*/
-	//test(true);
+	}
+	kNeighbours_ = 1;
 }
 
 int Eigenfaces::addFace(string path, int label, bool training)
@@ -215,6 +216,7 @@ void Eigenfaces::computeEigenfaces()
 	}
 
 	eigenfaces_ = A.transpose()*evRealSorted;
+	if (method_ == EIGEN) faces_ = eigenfaces_;
 }
 
 void Eigenfaces::computeFisherfaces()
@@ -261,6 +263,17 @@ void Eigenfaces::computeFisherfaces()
 	MatrixXd Wfld = complexToDouble(fld.eigenvectors());
 
 	fisherfaces_ = Wpca * Wfld;
+	if (method_ == FISHER) faces_ = fisherfaces_;
+}
+
+void Eigenfaces::setMethod(Method m)
+{
+	method_ = m;
+
+	if (m == EIGEN) faces_ = eigenfaces_;
+	else faces_ = fisherfaces_;
+
+	computeWeights();
 }
 
 void Eigenfaces::computeWeights()
@@ -277,7 +290,7 @@ void Eigenfaces::computeWeights()
 
 		for (int j = 0; j < EIGENFACE_NO; j++) {
 			//Eigenface vector
-			VectorXd E = eigenfaces_.col(j);
+			VectorXd E = faces_.col(j);
 			w[j] = E.transpose()*I;
 			w[j] /= imageSize() * 128;
 		}
@@ -368,7 +381,7 @@ Eigenfaces::Image Eigenfaces::reconstruct(int id, int n)
 
 	for (int i = 0; i < imageSize(); i++) {
 		for (int j = 0; j < n; j++) {
-			im[i] += eigenfaces_(i, j) * weights_[id][j];
+			im[i] += faces_(i, j) * weights_[id][j];
 		}
 	}
 
@@ -426,7 +439,7 @@ void Eigenfaces::displayEigenfaces(int amount)
 		for (int j = 0; j < cols; j++) {
 			vector<double>vTemp(imageSize());
 			for (int k = 0; k < imageSize(); k++) {
-				vTemp[k] = eigenfaces_(k, i*cols + j);
+				vTemp[k] = faces_(k, i*cols + j);
 			}
 			rowMats.push_back(displayImage(normalize(vTemp)));
 		}
