@@ -38,6 +38,7 @@ class Eigenfaces {
 
 	//Eigen matrices
 	MatrixXd eigenfaces_;
+	MatrixXd fisherfaces_;
 
 	//Weight vectors
 	struct WeightV {
@@ -54,6 +55,7 @@ class Eigenfaces {
 	void vectorize();
 	void computeMean();
 	void computeClassMeans();
+	MatrixXd computeTrainingArray();
 	void computeEigenfaces();
 	void computeFisherfaces();
 	void computeWeights();
@@ -77,8 +79,10 @@ class Eigenfaces {
 	int trainingSize();
 	int testSize();
 	int datasetSize();
+	int uniqueClasses();
 	Image normalize(vector<double>& v);
 	Image cvMatToImage(Mat mat);
+	MatrixXd complexToDouble(MatrixXcd m);
 
 public:
 

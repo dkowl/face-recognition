@@ -102,7 +102,7 @@ void Eigenfaces::computeClassIds()
 		}
 	}
 
-	classIds_ = vector<vector<int>>(datasetSize());
+	classIds_ = vector<vector<int>>(labelToClassId_.size());
 	for (int i = 0; i < labels_.size(); i++) {
 		classIds_[labelToClassId_[labels_[i]]].push_back(i);
 	}
@@ -175,15 +175,21 @@ void Eigenfaces::computeClassMeans()
 	}
 }
 
-void Eigenfaces::computeEigenfaces()
+MatrixXd Eigenfaces::computeTrainingArray()
 {
-	//Constructing array of training images
 	MatrixXd A(trainingSize(), imageSize());
 	for (int i = 0; i < trainingIds_.size(); i++) {
 		for (int j = 0; j < images_[i].size(); j++) {
 			A(i, j) = double(images_[i][j] - mean_[j]);
 		}
 	}
+	return A;
+}
+
+void Eigenfaces::computeEigenfaces()
+{
+	//Constructing array of training images
+	MatrixXd A = computeTrainingArray();
 
 	//computing eigenvectors
 	MatrixXd covariance = (A*A.transpose())/imageSize();
@@ -213,7 +219,48 @@ void Eigenfaces::computeEigenfaces()
 
 void Eigenfaces::computeFisherfaces()
 {
-	
+	MatrixXd A = computeTrainingArray();
+	MatrixXd covariance = (A*A.transpose()) / imageSize();
+	EigenSolver<MatrixXd> pca(covariance);
+	MatrixXd Wpca = (A.transpose()*complexToDouble(pca.eigenvectors())).leftCols(trainingSize() - uniqueClasses());
+	MatrixXd P = (Wpca.transpose()*A.transpose())/imageSize();
+	int ySize = P.rows();
+	VectorXd mean(ySize);
+	for (int i = 0; i < ySize; i++) {
+		mean(i) = P.row(i).mean();
+	}
+	MatrixXd classMean(ySize, uniqueClasses());
+	for (int k = 0; k < classIds_.size(); k++) {
+		vector<int> v = classIds_[k];
+		vector<int> ids;
+		for (int i = 0; i < v.size(); i++) {
+			if(trainingIdSet_.find(v[i]) != trainingIdSet_.end()) ids.push_back(v[i]);
+		}
+		for (int i = 0; i < ySize; i++) {
+			double sum = 0;
+			for (auto j : ids) {
+				sum += P(i, j);
+			}
+			classMean(i, k) = sum / ids.size();
+		}
+	}
+
+	MatrixXd Sb = MatrixXd::Zero(ySize, ySize);
+	for (int i = 0; i < uniqueClasses(); i++) {
+		Sb += classIds_[i].size() * ((classMean.col(i)-mean)*(classMean.col(i)-mean).transpose());
+	}
+	Sb /= ySize;
+	MatrixXd Sw = MatrixXd::Zero(ySize, ySize);
+	for (int i = 0; i < P.cols(); i++) {
+		VectorXd x = P.col(i), u = classMean.col(labelToClassId_[labels_[i]]);
+		Sw += (x - u)*(x - u).transpose();
+	}
+	Sw /= ySize;
+
+	EigenSolver<MatrixXd> fld(Sw.inverse()*Sb);
+	MatrixXd Wfld = complexToDouble(fld.eigenvectors());
+
+	fisherfaces_ = Wpca * Wfld;
 }
 
 void Eigenfaces::computeWeights()
@@ -244,6 +291,7 @@ void Eigenfaces::train()
 	computeMean();
 	computeClassMeans();
 	computeEigenfaces();
+	computeFisherfaces();
 	computeWeights();
 }
 
@@ -448,6 +496,11 @@ int Eigenfaces::datasetSize()
 	return trainingSize() + testSize();
 }
 
+int Eigenfaces::uniqueClasses()
+{
+	return classIds_.size();
+}
+
 Eigenfaces::Image Eigenfaces::normalize(vector<double>& v)
 {
 	double minVal = v[0], maxVal = v[0];
@@ -470,6 +523,17 @@ Eigenfaces::Image Eigenfaces::cvMatToImage(Mat mat)
 		image.insert(image.end(), mat.ptr<uchar>(r), mat.ptr<uchar>(r) + mat.cols);
 	}
 	return image;
+}
+
+MatrixXd Eigenfaces::complexToDouble(MatrixXcd m)
+{
+	MatrixXd mReal(m.rows(), m.cols());
+	for (int i = 0; i < m.rows(); i++) {
+		for (int j = 0; j < m.cols(); j++) {
+			mReal(i, j) = m(i, j).real();
+		}
+	}
+	return mReal;
 }
 
 void Eigenfaces::testCustomFace(string path)
